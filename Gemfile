@@ -3,6 +3,8 @@ source :rubygems
 gem "rack"
 gem "rake"
 gem "mime-types"
+gem "dalli"
+gem "aws-s3"
 
 group :development do
   gem "heroku"

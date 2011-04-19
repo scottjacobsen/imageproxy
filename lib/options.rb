@@ -18,6 +18,14 @@ class Options
     MIME::Types.of(@hash['source']).first.content_type
   end
 
+  def hash
+    Digest::MD5.hexdigest(@hash["source"] + "|" +@hash['resize'].to_s + "|"+ @hash['command'] + "|"+ @hash['shape'].to_s + "|"+ @hash['background'].to_s + "|"+ @hash['rotate'].to_s)
+  end
+
+  def filename
+    hash.to_s + "." + MIME::Types.of(@hash['source']).first.extensions.first
+  end
+
   private
   
   def unescape_source

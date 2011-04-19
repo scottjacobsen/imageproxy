@@ -1,7 +1,13 @@
 GEM
   remote: http://rubygems.org/
   specs:
+    aws-s3 (0.6.2)
+      builder
+      mime-types
+      xml-simple
+    builder (3.0.0)
     configuration (1.2.0)
+    dalli (1.0.3)
     diff-lcs (1.1.2)
     heroku (1.18.3)
       launchy (~> 0.3.2)
@@ -26,11 +32,14 @@ GEM
     rspec-mocks (2.5.0)
     shotgun (0.9)
       rack (>= 1.0)
+    xml-simple (1.0.15)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  aws-s3
+  dalli
   heroku
   mime-types
   rack
@@ -38,3 +47,6 @@ DEPENDENCIES
   rake
   rspec
   shotgun
+
+METADATA
+  version: 1.0.6
