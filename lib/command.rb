@@ -1,5 +1,5 @@
 class Command
-  protected
+  #protected
 
   def execute_command(command_line)
     stdin, stdout, stderr = Open3.popen3(command_line)
