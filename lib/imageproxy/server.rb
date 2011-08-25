@@ -29,6 +29,7 @@ module Imageproxy
             alias to_path path
           end
 
+          raise "Empty image file" unless File.stat(file.path).size > 0
           file.open
           [200, {"Cache-Control" => "max-age=#{cachetime}, must-revalidate"}.merge(content_type(file, options)), file]
         when "identify"
@@ -58,7 +59,7 @@ module Imageproxy
 
     def check_signature(request, options)
       if config?(:signature_required)
-        raise "Missing siganture" if options.signature.nil?
+        raise "Missing signature" if options.signature.nil?
 
         valid_signature = Signature.correct?(options.signature, request.fullpath, config(:signature_secret))
         raise "Invalid signature #{options.signature} for #{request.url}" unless valid_signature
