@@ -19,12 +19,19 @@ module Imageproxy
       cachetime = config(:cache_time) ? config(:cache_time) : 86400
 
       case options.command
+        when "crossdomain.xml"
+          xml ='<?xml version="1.0"?>
+<!DOCTYPE cross-domain-policy SYSTEM "http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd">
+<cross-domain-policy>
+  <allow-access-from domain="*" />
+</cross-domain-policy>'
+          [200, {"Content-Type" => "application/xml"}, [xml]]
         when "convert", "process", nil
           check_signature request, options
           check_domain options
           check_size options
 
-          file = Convert.new(options).execute(user_agent)
+          file = convert_file(options, user_agent)
           class << file
             alias to_path path
           end
@@ -44,10 +51,15 @@ module Imageproxy
       end
     rescue
       STDERR.puts $!
+      STDERR.puts $!.backtrace.join("\n") if config?(:verbose)
       [500, {"Content-Type" => "text/plain"}, ["Error (#{$!})"]]
     end
 
     private
+
+    def convert_file(options, user_agent)
+      Convert.new(options).execute(user_agent, config(:timeout))
+    end
 
     def config(symbol)
       ENV["IMAGEPROXY_#{symbol.to_s.upcase}"]
@@ -108,9 +120,13 @@ module Imageproxy
 
     def content_type(file, options)
       format = options.format
-      format = Imageproxy::IdentifyFormat.new(file).execute unless format
+      format = identify_format(file) unless format
       format = options.source unless format
       format ? { "Content-Type" => MIME::Types.of(format).first.content_type } : {}
+    end
+
+    def identify_format(file)
+      Imageproxy::IdentifyFormat.new(file).execute
     end
   end
 end
