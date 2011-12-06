@@ -19,6 +19,13 @@ module Imageproxy
       cachetime = config(:cache_time) ? config(:cache_time) : 86400
 
       case options.command
+        when "crossdomain.xml"
+          xml ='<?xml version="1.0"?>
+<!DOCTYPE cross-domain-policy SYSTEM "http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd">
+<cross-domain-policy>
+  <allow-access-from domain="*" />
+</cross-domain-policy>'
+          [200, {"Content-Type" => "application/xml"}, [xml]]
         when "convert", "process", nil
           check_signature request, options
           check_domain options
