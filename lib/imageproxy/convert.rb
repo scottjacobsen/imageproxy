@@ -12,7 +12,26 @@ module Imageproxy
     end
 
     def execute(user_agent=nil, timeout=nil)
-      execute_command %'#{curl options.source, :user_agent => user_agent, :timeout => timeout} | convert - #{convert_options} #{new_format}#{file.path}'
+
+      curl_command = curl options.source, :user_agent => user_agent, :timeout => timeout
+      Open3.popen3(curl_command) do |stdin, stdout, stderr, wait_thr|
+        image = Magick::Image.read(stdout).first
+
+        if options.resize
+          crop_x, crop_y = options.resize.split('x').collect(&:to_i)
+
+          if options.shape == "cut"
+            image.crop_resized!(crop_x, crop_y, Magick::CenterGravity)
+          else
+            image.change_geometry(options.resize) do |x, y, img|
+              img.resize!(x, y)
+            end
+          end
+        end
+
+        image.write(file.path)
+      end
+
       file
     end
 
