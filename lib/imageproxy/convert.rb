@@ -1,5 +1,7 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), "command")
 
+require 'RMagick'
+
 module Imageproxy
   class Convert < Imageproxy::Command
     attr_reader :options
