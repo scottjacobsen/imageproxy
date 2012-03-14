@@ -1,8 +1,10 @@
 source :rubygems
 
+gem "curb", "~> 0.8.0"
 gem "rack"
 gem "rake"
 gem "mime-types"
+gem "rmagick", "~> 2.13"
 
 group :development, :test do
   gem "heroku"

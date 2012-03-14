@@ -31,14 +31,12 @@ module Imageproxy
           check_domain options
           check_size options
 
-          file = convert_file(options, user_agent)
-          class << file
-            alias to_path path
-          end
+          blob = convert_file(options, user_agent)
 
-          raise "Empty image file" unless File.stat(file.path).size > 0
-          file.open
-          [200, {"Cache-Control" => "max-age=#{cachetime}, must-revalidate"}.merge(content_type(file, options)), file]
+          raise "Empty image file" if blob.empty?
+          ctype = {'Content-Type' => 'image/jpeg'}
+
+          [200, {"Cache-Control" => "max-age=#{cachetime}, must-revalidate", "Content-Length" => blob.bytesize.to_s}.merge(ctype), StringIO.new(blob)]
         when "identify"
           check_signature request, options
           check_domain options
@@ -118,12 +116,12 @@ module Imageproxy
       end
     end
 
-    def content_type(file, options)
-      format = options.format
-      format = identify_format(file) unless format
-      format = options.source unless format
-      format ? { "Content-Type" => MIME::Types.of(format).first.content_type } : {}
-    end
+    #def content_type(file, options)
+    #  format = options.format
+    #  format = identify_format(file) unless format
+    #  format = options.source unless format
+    #  format ? { "Content-Type" => MIME::Types.of(format).first.content_type } : {}
+    #end
 
     def identify_format(file)
       Imageproxy::IdentifyFormat.new(file).execute
