@@ -12,7 +12,7 @@ module Imageproxy
     end
 
     def execute(user_agent=nil, timeout=nil)
-
+      blob = nil
       curl_command = curl options.source, :user_agent => user_agent, :timeout => timeout
       Open3.popen3(curl_command) do |stdin, stdout, stderr, wait_thr|
         image = Magick::Image.read(stdout).first
@@ -29,10 +29,10 @@ module Imageproxy
           end
         end
 
-        image.write(file.path)
+        blob = image.to_blob
       end
 
-      file
+      blob
     end
 
     def convert_options
