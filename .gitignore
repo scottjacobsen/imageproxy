@@ -1,6 +1,13 @@
-.idea/*
 .rvmrc
 .bundle
+
+# IntelliJ
+/.idea
+/*.iml
+/.rakeTasks
+
+# Emacs
+*~
 
 # rcov generated
 coverage
