@@ -34,9 +34,11 @@ module Imageproxy
           blob = convert_file(options, user_agent)
 
           raise "Empty image file" if blob.empty?
-          ctype = {'Content-Type' => 'image/jpeg'}
 
-          [200, {"Cache-Control" => "max-age=#{cachetime}, must-revalidate", "Content-Length" => blob.bytesize.to_s}.merge(ctype), StringIO.new(blob)]
+          headers = {"Cache-Control" => "public, max-age=#{cachetime}, must-revalidate",
+                     "Content-Length" => blob.bytesize.to_s,
+                     "Content-Type" => 'image/jpeg'}
+          [200, headers, StringIO.new(blob)]
         when "identify"
           check_signature request, options
           check_domain options
