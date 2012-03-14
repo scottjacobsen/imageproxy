@@ -67,7 +67,9 @@ describe "Server" do
   context "when limiting to certain domains" do
     before do
       app.stub!(:config) { |sym| {:allowed_domains => " example.com  ,example.org"}[sym] }
-      app.stub!(:convert_file).and_return(Tempfile.new("fooo"))
+      convert_file = Tempfile.new("fooo")
+      convert_file.write(open(test_image_path).read)
+      app.stub!(:convert_file).and_return(convert_file)
       app.stub!(:content_type).and_return({ "Content-Type" => "image/jpeg"})
     end
 
