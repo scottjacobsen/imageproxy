@@ -3,6 +3,7 @@ source :rubygems
 gem "rack"
 gem "rake"
 gem "mime-types"
+gem "rmagick", "~> 2.13"
 
 group :development, :test do
   gem "heroku"
