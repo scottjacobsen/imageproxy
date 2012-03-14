@@ -12,25 +12,29 @@ module Imageproxy
     end
 
     def execute(user_agent=nil, timeout=nil)
-      blob = nil
-      curl_command = curl options.source, :user_agent => user_agent, :timeout => timeout
-      Open3.popen3(curl_command) do |stdin, stdout, stderr, wait_thr|
-        image = Magick::Image.read(stdout).first
+      user_agent = user_agent || "imageproxy"
 
-        if options.resize
-          crop_x, crop_y = options.resize.split('x').collect(&:to_i)
+      request = Curl::Easy.perform(options.source) do |curl|
+        curl.timeout = timeout if timeout
+        curl.useragent = user_agent if user_agent
+      end
+      original_image = request.body_str
 
-          if options.shape == "cut"
-            image.crop_resized!(crop_x, crop_y, Magick::CenterGravity)
-          else
-            image.change_geometry(options.resize) do |x, y, img|
-              img.resize!(x, y)
-            end
+      image = Magick::Image.from_blob(original_image).first
+
+      if options.resize
+        x, y = options.resize.split('x').collect(&:to_i)
+
+        if options.shape == "cut"
+          image.crop_resized!(x, y, Magick::CenterGravity)
+        else
+          image.change_geometry(options.resize) do |proportional_x, proportional_y, img|
+            img.resize!(proportional_x, proportional_y)
           end
         end
-
-        blob = image.to_blob
       end
+
+      blob = image.to_blob
 
       blob
     end

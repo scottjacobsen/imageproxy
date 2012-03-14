@@ -1,5 +1,6 @@
 source :rubygems
 
+gem "curb", "~> 0.8.0"
 gem "rack"
 gem "rake"
 gem "mime-types"
