@@ -28,11 +28,11 @@ module Imageproxy
           check_domain options
           check_size options
 
-          converted_image = Convert.new(options).execute(user_agent, config(:timeout))
+          converted_image = Convert.new(options, config(:cache_time)).execute(user_agent, config(:timeout))
 
           raise "Empty image file" if converted_image.empty?
 
-          [200, converted_image.headers(config(:cache_time), options), converted_image.stream]
+          [200, converted_image.headers, converted_image.stream]
         when "selftest"
           [200, {"Content-Type" => "text/html"}, [Selftest.html(request, config?(:signature_required), config(:signature_secret))]]
         else

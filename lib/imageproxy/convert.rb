@@ -11,8 +11,8 @@ module Imageproxy
     class ConvertedImage
       attr_reader :image_blob, :source_headers
 
-      def initialize(image_blob, source_headers)
-        @image_blob, @source_headers = image_blob, source_headers
+      def initialize(image_blob, source_headers, options, cache_time)
+        @image_blob, @source_headers, @options, @cache_time = image_blob, source_headers, options, cache_time
       end
 
       def source_etag
@@ -39,14 +39,14 @@ module Imageproxy
         StringIO.new(@image_blob)
       end
 
-      def headers(cache_time, options)
-        cache_time = cache_time || 86400
+      def headers
+        cache_time = @cache_time || 86400
         headers = {"Cache-Control" => "public, max-age=#{cache_time}, must-revalidate",
                    "Content-Length" => size.to_s,
                    "Content-Type" => content_type}
         if source_etag
           quoted_original_etag = source_etag.tr('"', '')
-          headers.merge!("ETag" => %{W/"#{quoted_original_etag}-#{transformation_checksum(options)}"})
+          headers.merge!("ETag" => %{W/"#{quoted_original_etag}-#{transformation_checksum(@options)}"})
         end
         headers
       end
@@ -59,8 +59,9 @@ module Imageproxy
       end
     end
 
-    def initialize(options)
+    def initialize(options, cache_time)
       @options = options
+      @cache_time = cache_time
       if (!(options.resize || options.thumbnail || options.rotate || options.flip || options.format || options.quality))
         raise "Missing action or illegal parameter value"
       end
@@ -88,7 +89,7 @@ module Imageproxy
 
       image.strip! # Remove EXIF garbage
 
-      ConvertedImage.new(image.to_blob, response.headers)
+      ConvertedImage.new(image.to_blob, response.headers, options, @cache_time)
     end
   end
 end
