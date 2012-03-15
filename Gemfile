@@ -4,7 +4,7 @@ gem "rest-client", "~> 1.6.7"
 gem "rack"
 gem "rake"
 gem "mime-types"
-gem "rmagick", "~> 2.13"
+gem "rmagick", "~> 2.13", :require => false
 
 group :development, :test do
   gem "heroku"

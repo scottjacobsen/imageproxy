@@ -15,13 +15,11 @@ module Imageproxy
         @image_blob, @source_headers = image_blob, source_headers
       end
 
-      def etag
+      def source_etag
         if source_headers[:etag]
-          if source_headers[:etag] =~ /(?:W\/)?\"(.*)\"/
-            $1
-          else
-            nil
-          end
+          match = /(?:W\/)?\"(.*)\"/.match(source_headers[:etag])
+          return nil unless match
+          match[1]
         end
       end
 
@@ -46,8 +44,8 @@ module Imageproxy
         headers = {"Cache-Control" => "public, max-age=#{cache_time}, must-revalidate",
                    "Content-Length" => size.to_s,
                    "Content-Type" => content_type}
-        if etag
-          quoted_original_etag = etag.tr('"', '')
+        if source_etag
+          quoted_original_etag = source_etag.tr('"', '')
           headers.merge!("ETag" => %{W/"#{quoted_original_etag}-#{transformation_checksum(options)}"})
         end
         headers
