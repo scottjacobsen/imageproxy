@@ -6,6 +6,24 @@ module Imageproxy
   class Convert < Imageproxy::Command
     attr_reader :options
 
+    class ConvertedImage
+      attr_reader :image_blob, :source_headers
+
+      def initialize(image_blob, source_headers)
+        @image_blob, @source_headers = image_blob, source_headers
+      end
+
+      def etag
+        if source_headers['etag']
+          if source_headers['etag'] =~ /(?:W\/)?\"(.*)\"/
+            $1
+          else
+            nil
+          end
+        end
+      end
+    end
+
     def initialize(options)
       @options = options
       if (!(options.resize || options.thumbnail || options.rotate || options.flip || options.format || options.quality))
@@ -16,9 +34,17 @@ module Imageproxy
     def execute(user_agent=nil, timeout=nil)
       user_agent = user_agent || "imageproxy"
 
+      headers = {}
+
       request = Curl::Easy.perform(options.source) do |curl|
         curl.timeout = timeout if timeout
         curl.useragent = user_agent if user_agent
+        curl.on_header {|header|
+          if header =~ /^(.+?)\: (.*)\r?\n$/
+            headers[$1.downcase] = $2
+          end
+          header.bytesize
+        }
       end
       original_image = request.body_str
 
@@ -36,7 +62,9 @@ module Imageproxy
         end
       end
 
-      image.to_blob
+      p headers
+
+      ConvertedImage.new(image.to_blob, headers)
     end
 
     #def convert_options

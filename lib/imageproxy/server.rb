@@ -5,6 +5,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), "identify_format")
 require File.join(File.expand_path(File.dirname(__FILE__)), "selftest")
 require File.join(File.expand_path(File.dirname(__FILE__)), "signature")
 require 'uri'
+require 'digest'
 
 module Imageproxy
   class Server
@@ -31,14 +32,21 @@ module Imageproxy
           check_domain options
           check_size options
 
-          blob = convert_file(options, user_agent)
+          converted_image = convert_file(options, user_agent)
+          image_blob = converted_image.image_blob
 
-          raise "Empty image file" if blob.empty?
+          raise "Empty image file" if image_blob.empty?
 
           headers = {"Cache-Control" => "public, max-age=#{cachetime}, must-revalidate",
-                     "Content-Length" => blob.bytesize.to_s,
+                     "Content-Length" => image_blob.bytesize.to_s,
                      "Content-Type" => 'image/jpeg'}
-          [200, headers, StringIO.new(blob)]
+
+          if converted_image.etag
+            quoted_original_etag = converted_image.etag.tr('"', '')
+            headers.merge!("ETag" => %{W/"#{quoted_original_etag}-#{transformation_checksum(options)}"})
+          end
+
+          [200, headers, StringIO.new(image_blob)]
         when "identify"
           check_signature request, options
           check_domain options
@@ -56,6 +64,13 @@ module Imageproxy
     end
 
     private
+
+    def transformation_checksum(options)
+      buffer = options.keys.sort.collect { |key|
+        "#{key}:#{options[key]}"
+      }.flatten.join(':')
+      Digest::MD5.hexdigest(buffer)[0..8]
+    end
 
     def convert_file(options, user_agent)
       Convert.new(options).execute(user_agent, config(:timeout))
