@@ -52,6 +52,8 @@ module Imageproxy
 
         if source_etag
           quoted_original_etag = source_etag.tr('"', '')
+          # Using weak etag (the prefixed "W"), since the image transformations
+          # aren't necessarily byte-to-byte identical
           headers.merge!("ETag" => %{W/"#{quoted_original_etag}-#{transformation_checksum(@options)}"})
         end
         headers
@@ -78,6 +80,25 @@ module Imageproxy
       end
     end
 
+    def process_image(original_image)
+      image = Magick::Image.from_blob(original_image).first
+
+      if options.resize
+        x, y = options.resize.split('x').collect(&:to_i)
+
+        if options.shape == "cut"
+          image.crop_resized!(x, y, Magick::CenterGravity)
+        else
+          image.change_geometry(options.resize) do |proportional_x, proportional_y, img|
+            img.resize!(proportional_x, proportional_y)
+          end
+        end
+      end
+
+      image.strip! # Remove EXIF garbage
+      image
+    end
+
     def execute(user_agent=nil, timeout=nil)
       user_agent = user_agent || "imageproxy"
 
@@ -98,21 +119,7 @@ module Imageproxy
       end
 
       original_image = response.to_str
-      image = Magick::Image.from_blob(original_image).first
-
-      if options.resize
-        x, y = options.resize.split('x').collect(&:to_i)
-
-        if options.shape == "cut"
-          image.crop_resized!(x, y, Magick::CenterGravity)
-        else
-          image.change_geometry(options.resize) do |proportional_x, proportional_y, img|
-            img.resize!(proportional_x, proportional_y)
-          end
-        end
-      end
-
-      image.strip! # Remove EXIF garbage
+      image = process_image(original_image)
 
       ConvertedImage.new(image.to_blob, response.headers, options, @cache_time)
     end
