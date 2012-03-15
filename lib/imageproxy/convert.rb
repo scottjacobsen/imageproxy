@@ -2,6 +2,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), "command")
 
 require 'RMagick'
 require 'rest_client'
+require 'digest'
 
 module Imageproxy
   class Convert < Imageproxy::Command
@@ -26,6 +27,37 @@ module Imageproxy
 
       def content_type
         source_headers[:content_type]
+      end
+
+      def empty?
+        @image_blob.empty?
+      end
+
+      def size
+        @image_blob.bytesize
+      end
+
+      def stream
+        StringIO.new(@image_blob)
+      end
+
+      def headers(cache_time, options)
+        cache_time = cache_time || 86400
+        headers = {"Cache-Control" => "public, max-age=#{cache_time}, must-revalidate",
+                   "Content-Length" => size.to_s,
+                   "Content-Type" => content_type}
+        if etag
+          quoted_original_etag = etag.tr('"', '')
+          headers.merge!("ETag" => %{W/"#{quoted_original_etag}-#{transformation_checksum(options)}"})
+        end
+        headers
+      end
+
+      def transformation_checksum(options)
+        buffer = options.keys.sort.collect { |key|
+          "#{key}:#{options[key]}"
+        }.flatten.join(':')
+        Digest::MD5.hexdigest(buffer)[0..8]
       end
     end
 

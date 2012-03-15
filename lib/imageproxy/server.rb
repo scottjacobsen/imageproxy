@@ -3,7 +3,6 @@ require File.join(File.expand_path(File.dirname(__FILE__)), "convert")
 require File.join(File.expand_path(File.dirname(__FILE__)), "selftest")
 require File.join(File.expand_path(File.dirname(__FILE__)), "signature")
 require 'uri'
-require 'digest'
 
 module Imageproxy
   class Server
@@ -15,7 +14,6 @@ module Imageproxy
       request = Rack::Request.new(env)
       options = Options.new(request.path_info, request.params)
       user_agent = request.env["HTTP_USER_AGENT"]
-      cachetime = config(:cache_time) ? config(:cache_time) : 86400
 
       case options.command
         when "crossdomain.xml"
@@ -32,20 +30,9 @@ module Imageproxy
 
           converted_image = Convert.new(options).execute(user_agent, config(:timeout))
 
-          image_blob = converted_image.image_blob
+          raise "Empty image file" if converted_image.empty?
 
-          raise "Empty image file" if image_blob.empty?
-
-          headers = {"Cache-Control" => "public, max-age=#{cachetime}, must-revalidate",
-                     "Content-Length" => image_blob.bytesize.to_s,
-                     "Content-Type" => converted_image.content_type}
-
-          if converted_image.etag
-            quoted_original_etag = converted_image.etag.tr('"', '')
-            headers.merge!("ETag" => %{W/"#{quoted_original_etag}-#{transformation_checksum(options)}"})
-          end
-
-          [200, headers, StringIO.new(image_blob)]
+          [200, converted_image.headers(config(:cache_time), options), converted_image.stream]
         when "selftest"
           [200, {"Content-Type" => "text/html"}, [Selftest.html(request, config?(:signature_required), config(:signature_secret))]]
         else
@@ -58,13 +45,6 @@ module Imageproxy
     end
 
     private
-
-    def transformation_checksum(options)
-      buffer = options.keys.sort.collect { |key|
-        "#{key}:#{options[key]}"
-      }.flatten.join(':')
-      Digest::MD5.hexdigest(buffer)[0..8]
-    end
 
     def config(symbol)
       ENV["IMAGEPROXY_#{symbol.to_s.upcase}"]
