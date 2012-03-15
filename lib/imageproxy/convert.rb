@@ -1,6 +1,7 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), "command")
 
 require 'RMagick'
+require 'rest_client'
 
 module Imageproxy
   class Convert < Imageproxy::Command
@@ -14,8 +15,8 @@ module Imageproxy
       end
 
       def etag
-        if source_headers['etag']
-          if source_headers['etag'] =~ /(?:W\/)?\"(.*)\"/
+        if source_headers[:etag]
+          if source_headers[:etag] =~ /(?:W\/)?\"(.*)\"/
             $1
           else
             nil
@@ -34,20 +35,9 @@ module Imageproxy
     def execute(user_agent=nil, timeout=nil)
       user_agent = user_agent || "imageproxy"
 
-      headers = {}
+      response = RestClient.get(options.source, :timeout => timeout, :headers => {'User-Agent' => user_agent})
 
-      request = Curl::Easy.perform(options.source) do |curl|
-        curl.timeout = timeout if timeout
-        curl.useragent = user_agent if user_agent
-        curl.on_header {|header|
-          if header =~ /^(.+?)\: (.*)\r?\n$/
-            headers[$1.downcase] = $2
-          end
-          header.bytesize
-        }
-      end
-      original_image = request.body_str
-
+      original_image = response.to_str
       image = Magick::Image.from_blob(original_image).first
 
       if options.resize
@@ -62,9 +52,9 @@ module Imageproxy
         end
       end
 
-      p headers
+      p response.headers
 
-      ConvertedImage.new(image.to_blob, headers)
+      ConvertedImage.new(image.to_blob, response.headers)
     end
 
     #def convert_options

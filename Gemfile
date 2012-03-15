@@ -1,6 +1,6 @@
 source :rubygems
 
-gem "curb", "~> 0.8.0"
+gem "rest-client", "~> 1.6.7"
 gem "rack"
 gem "rake"
 gem "mime-types"
