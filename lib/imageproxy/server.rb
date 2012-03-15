@@ -32,7 +32,8 @@ module Imageproxy
           check_domain options
           check_size options
 
-          converted_image = convert_file(options, user_agent)
+          converted_image = Convert.new(options).execute(user_agent, config(:timeout))
+
           image_blob = converted_image.image_blob
 
           raise "Empty image file" if image_blob.empty?
@@ -47,11 +48,6 @@ module Imageproxy
           end
 
           [200, headers, StringIO.new(image_blob)]
-        when "identify"
-          check_signature request, options
-          check_domain options
-
-          [200, {"Content-Type" => "text/plain"}, [Identify.new(options).execute(user_agent)]]
         when "selftest"
           [200, {"Content-Type" => "text/html"}, [Selftest.html(request, config?(:signature_required), config(:signature_secret))]]
         else
@@ -70,10 +66,6 @@ module Imageproxy
         "#{key}:#{options[key]}"
       }.flatten.join(':')
       Digest::MD5.hexdigest(buffer)[0..8]
-    end
-
-    def convert_file(options, user_agent)
-      Convert.new(options).execute(user_agent, config(:timeout))
     end
 
     def config(symbol)
