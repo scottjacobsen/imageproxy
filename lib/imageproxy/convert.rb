@@ -52,7 +52,7 @@ module Imageproxy
         end
       end
 
-      p response.headers
+      image.strip! # Remove EXIF garbage
 
       ConvertedImage.new(image.to_blob, response.headers)
     end
