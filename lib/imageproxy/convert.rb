@@ -11,7 +11,8 @@ module Imageproxy
     class ConvertedImage
       attr_reader :image_blob, :source_headers
 
-      def initialize(image_blob, source_headers, options, cache_time)
+      def initialize(image_blob, source_headers, options, cache_time, modified = true)
+        @modified = modified
         @image_blob, @source_headers, @options, @cache_time = image_blob, source_headers, options, cache_time
       end
 
@@ -32,6 +33,7 @@ module Imageproxy
       end
 
       def size
+        return 0 if @image_blob.nil?
         @image_blob.bytesize
       end
 
@@ -41,9 +43,13 @@ module Imageproxy
 
       def headers
         cache_time = @cache_time || 86400
-        headers = {"Cache-Control" => "public, max-age=#{cache_time}, must-revalidate",
-                   "Content-Length" => size.to_s,
-                   "Content-Type" => content_type}
+        headers = {"Cache-Control" => "public, max-age=#{cache_time}, must-revalidate" }
+
+        if modified?
+          headers.merge!("Content-Length" => size.to_s,
+                         "Content-Type" => content_type)
+        end
+
         if source_etag
           quoted_original_etag = source_etag.tr('"', '')
           headers.merge!("ETag" => %{W/"#{quoted_original_etag}-#{transformation_checksum(@options)}"})
@@ -57,11 +63,16 @@ module Imageproxy
         }.flatten.join(':')
         Digest::MD5.hexdigest(buffer)[0..8]
       end
+
+      def modified?
+        @modified
+      end
     end
 
-    def initialize(options, cache_time)
+    def initialize(options, cache_time, requested_etag = nil)
       @options = options
       @cache_time = cache_time
+      @requested_etag = requested_etag
       if (!(options.resize || options.thumbnail || options.rotate || options.flip || options.format || options.quality))
         raise "Missing action or illegal parameter value"
       end
@@ -70,7 +81,21 @@ module Imageproxy
     def execute(user_agent=nil, timeout=nil)
       user_agent = user_agent || "imageproxy"
 
-      response = RestClient.get(options.source, :timeout => timeout, :headers => {'User-Agent' => user_agent})
+      request_options = {
+              :timeout => timeout,
+              :user_agent => user_agent,
+              :accept => '*/*'
+      }
+      if @requested_etag && @requested_etag =~ %r{^(?:W\/)?"(.+)\-(.*?)"$}
+        source_etag = $1
+        request_options[:if_none_match] = %{"#{source_etag}"}
+      end
+
+      begin
+        response = RestClient.get(options.source, request_options)
+      rescue RestClient::NotModified => e
+        return ConvertedImage.new(nil, e.response.headers, options, @cache_time, false)
+      end
 
       original_image = response.to_str
       image = Magick::Image.from_blob(original_image).first
