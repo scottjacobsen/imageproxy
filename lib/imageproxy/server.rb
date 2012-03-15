@@ -1,6 +1,5 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), "options")
 require File.join(File.expand_path(File.dirname(__FILE__)), "convert")
-require File.join(File.expand_path(File.dirname(__FILE__)), "identify_format")
 require File.join(File.expand_path(File.dirname(__FILE__)), "selftest")
 require File.join(File.expand_path(File.dirname(__FILE__)), "signature")
 require 'uri'
@@ -122,17 +121,6 @@ module Imageproxy
       else
         sizes[0].to_i
       end
-    end
-
-    #def content_type(file, options)
-    #  format = options.format
-    #  format = identify_format(file) unless format
-    #  format = options.source unless format
-    #  format ? { "Content-Type" => MIME::Types.of(format).first.content_type } : {}
-    #end
-
-    def identify_format(file)
-      Imageproxy::IdentifyFormat.new(file).execute
     end
   end
 end
