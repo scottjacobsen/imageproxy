@@ -1,6 +1,5 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), "options")
 require File.join(File.expand_path(File.dirname(__FILE__)), "convert")
-require File.join(File.expand_path(File.dirname(__FILE__)), "identify")
 require File.join(File.expand_path(File.dirname(__FILE__)), "identify_format")
 require File.join(File.expand_path(File.dirname(__FILE__)), "selftest")
 require File.join(File.expand_path(File.dirname(__FILE__)), "signature")
@@ -40,7 +39,7 @@ module Imageproxy
 
           headers = {"Cache-Control" => "public, max-age=#{cachetime}, must-revalidate",
                      "Content-Length" => image_blob.bytesize.to_s,
-                     "Content-Type" => 'image/jpeg'}
+                     "Content-Type" => converted_image.content_type}
 
           if converted_image.etag
             quoted_original_etag = converted_image.etag.tr('"', '')
@@ -55,7 +54,7 @@ module Imageproxy
       end
     rescue
       STDERR.puts $!
-      STDERR.puts $!.backtrace.join("\n") if config?(:verbose)
+      STDERR.puts $!.backtrace.join("\n")
       [500, {"Content-Type" => "text/plain"}, ["Error (#{$!})"]]
     end
 

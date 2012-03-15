@@ -23,6 +23,10 @@ module Imageproxy
           end
         end
       end
+
+      def content_type
+        source_headers[:content_type]
+      end
     end
 
     def initialize(options)
