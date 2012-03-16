@@ -1,3 +1,4 @@
+ENV["RACK_ENV"] = "test" 
 Bundler.require :test
 
 Dir.glob(File.join(File.dirname(__FILE__), "..", "lib", "**", "*.rb")).each {|f| require f }

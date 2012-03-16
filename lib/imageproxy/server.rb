@@ -3,6 +3,8 @@ require File.join(File.expand_path(File.dirname(__FILE__)), "convert")
 require File.join(File.expand_path(File.dirname(__FILE__)), "selftest")
 require File.join(File.expand_path(File.dirname(__FILE__)), "signature")
 require 'uri'
+require 'newrelic_rpm'
+require 'new_relic/agent/instrumentation/rack'
 
 module Imageproxy
   class Server
@@ -46,7 +48,8 @@ module Imageproxy
       STDERR.puts $!.backtrace.join("\n")
       [500, {"Content-Type" => "text/plain"}, ["Error (#{$!})"]]
     end
-
+    # Do the include after the call method is defined:
+    include NewRelic::Agent::Instrumentation::Rack
     private
 
     def config(symbol)
