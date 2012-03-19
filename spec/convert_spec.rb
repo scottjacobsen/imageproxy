@@ -1,151 +1,79 @@
+
 require 'spec_helper'
 
 describe Imageproxy::Convert do
-  before do
-    @mock_file = mock("file")
-    @mock_file.stub!(:path).and_return("/mock/file/path")
-  end
 
-  def command(options)
-    command = Imageproxy::Convert.new(Imageproxy::Options.new("", {:source => "http%3A%2F%2Fexample.com%2Fdog.jpg"}.merge(options)))
-    command.stub!(:file).and_return(@mock_file)
-    command.stub!(:system)
-    command
-  end
-
-  context "general" do
+  context "When requesting a resize" do
     before do
-      @command = Imageproxy::Convert.new(Imageproxy::Options.new("/convert/format/png/resize/10x20/source/http%3A%2F%2Fexample.com%2Fdog.jpg", {}))
-      @command.stub!(:file).and_return(@mock_file)
-      @command.stub!(:system)
+      @options = mock("options")
+      @options.stub(:resize).and_return("123x456")
+      @options.stub(:source).and_return("http://example.com/sample.png")
+      @options.stub(:shape).and_return(nil)
+      @options.stub(:keys).and_return([:resize, :source])
+      @options.stub(:[]).with(:resize).and_return("123x456")
+      @options.stub(:[]).with(:source).and_return("http://example.com/sample.png")
+
+      @response = mock("response")
+      @response.stub(:headers).and_return({:etag => '"SOMEETAG"'})
+      @response.stub(:code).and_return(200)
+      RestClient.stub(:get).and_return(@response)
+      @response.stub(:to_str).and_return(open('public/sample.png').read)
     end
 
-    it "should generate the proper command-line" do
-      @command.should_receive(:execute_command).with(%'curl -L -s -A "imageproxy" "http://example.com/dog.jpg" | convert - -resize 10x20 png:/mock/file/path')
-      @command.execute
+    it "resizes the image" do
+      result = Imageproxy::Convert.new(@options, 1000).execute("test agent", 1234)
+
+      image = Magick::Image.from_blob(result.stream.read).first
+      image.columns.should == 123
+      image.rows.should == 71
     end
 
-    it "should return the output file" do
-      @command.stub!(:execute_command)
-      @command.execute.should == @mock_file
-    end
-  end
+    it "creates an ETag based on the source's ETag and the options" do
+      result = Imageproxy::Convert.new(@options, 1000).execute("test agent", 1234)
 
-  context "when resizing" do
-    it("with no extra args") do
-      command(:resize => "10x20").convert_options.should ==
-        '-resize 10x20'
+      result.headers['ETag'].should =~ %r{^W\/"SOMEETAG\-.+"$}
     end
 
-    it("with a different size") do
-      command(:resize => "50x50").convert_options.should ==
-        '-resize 50x50'
-    end
+    it "uses the given timeout when fetching" do
+      RestClient.should_receive(:get).with("http://example.com/sample.png", :timeout => 1234, :user_agent => "test agent", :accept => '*/*').and_return(@response)
 
-    it("when preserving shape") do
-      command(:resize => "10x20", :shape => "preserve").convert_options.should ==
-        '-resize 10x20'
-    end
-
-    it("when padding") do
-      command(:resize => "10x20", :shape => "pad").convert_options.should ==
-        '-resize 10x20 -background none -matte -gravity center -extent 10x20'
-    end
-
-    it("when padding with a background color") do
-      command(:resize => "10x20", :shape => "pad", :background => "#ff00ff").convert_options.should ==
-        '-resize 10x20 -background "#ff00ff" -gravity center -extent 10x20'
-    end
-
-    it("when cutting") do
-      command(:resize => "10x20", :shape => "cut").convert_options.should ==
-        '-resize 10x20^ -gravity center -extent 10x20'
+      Imageproxy::Convert.new(@options, 1000).execute("test agent", 1234)
     end
   end
 
-  context "when thumbnailing" do
-    it("when preserving shape") do
-      command(:thumbnail => "10x20", :shape => "preserve").convert_options.should ==
-        '-thumbnail 10x20'
+  context "When requesting a resize we already may have cached" do
+    before do
+      @options = mock("options")
+      @options.stub(:resize).and_return("123x456")
+      @options.stub(:source).and_return("http://example.com/sample.png")
+      @options.stub(:shape).and_return(nil)
+      @options.stub(:keys).and_return([:resize, :source])
+      @options.stub(:[]).with(:resize).and_return("123x456")
+      @options.stub(:[]).with(:source).and_return("http://example.com/sample.png")
+
+      @response = mock("response")
+      @response.stub(:headers).and_return({:etag => '"SOMEETAG"'})
+      @response.stub(:code).and_return(200)
+      RestClient.stub(:get).and_return(@response)
+      @response.stub(:to_str).and_return(open('public/sample.png').read)
     end
 
-    it("when padding") do
-      command(:thumbnail => "10x20", :shape => "pad", :background => "#ff00ff").convert_options.should ==
-        '-thumbnail 10x20 -background "#ff00ff" -gravity center -extent 10x20'
+    it "resizes the image if the source has changed" do
+      RestClient.should_receive(:get).with("http://example.com/sample.png", :timeout => 1234, :user_agent => "test agent", :if_none_match => '"SOMEETAG"', :accept => '*/*').and_return(@response)
+
+      result = Imageproxy::Convert.new(@options, 1000, '"SOMEETAG-foo"').execute("test agent", 1234)
+
+      result.should be_modified
     end
 
-    it("when cutting") do
-      command(:thumbnail => "10x20", :shape => "cut").convert_options.should ==
-        '-thumbnail 10x20^ -gravity center -extent 10x20'
-    end
-  end
+    it "doesn't resize the image if source hasn't changed" do
+      RestClient.stub(:get).and_raise(RestClient::NotModified.new(@response))
+      RestClient.should_receive(:get).with("http://example.com/sample.png", :timeout => 1234, :user_agent => "test agent", :if_none_match => '"SOMEETAG"', :accept => '*/*').and_return(@response)
+      Magick::Image.should_not_receive(:from_blob)
 
-  context "when flipping" do
-    it("should flip horizontal") do
-      command(:flip => "horizontal").convert_options.should ==
-        "-flop"
-    end
+      result = Imageproxy::Convert.new(@options, 1000, '"SOMEETAG-foo"').execute("test agent", 1234)
 
-    it("should flip vertical") do
-      command(:flip => "vertical").convert_options.should ==
-        "-flip"
-    end
-  end
-
-  context "when rotating" do
-    it("should rotate to a right angle") do
-      command(:rotate => "90").convert_options.should ==
-        "-rotate 90"
-    end
-
-    it("should rotate to a non-right angle") do
-      command(:rotate => "92.1").convert_options.should ==
-        "-background none -matte -rotate 92.1"
-    end
-
-    it("should rotate to a non-right angle with a background") do
-      command(:rotate => "92.1", :background => "#ff00ff").convert_options.should ==
-        '-background "#ff00ff" -matte -rotate 92.1'
-    end
-  end
-
-  context "when changing format" do
-    it("should not change the format if not requested") do
-      command(:rotate => "90").new_format.should ==
-        ""
-    end
-
-    it("should not change the format if not requested") do
-      command(:rotate => "90", :format => "png").new_format.should ==
-        "png:"
-    end
-
-    it("should set the colors when converting to png8") do
-      command(:rotate => "90", :format => "png8").convert_options.should ==
-        "-rotate 90 -colors 256"
-    end
-  end
-
-  context "when changing quality" do
-    it("should set the quality") do
-      command(:quality => "85").convert_options.should ==
-        "-quality 85"
-    end
-  end
-
-  context "when converting to progressive" do
-    it("should be 'JPEG' if progressive is 'true'") do
-      command(:resize => "10x10", :progressive => "true").convert_options.should ==
-        "-resize 10x10 -interlace JPEG"
-    end
-
-    it("should be 'none' if progressive is 'false'") do
-      command(:resize => "10x10", :progressive => "false").convert_options.should ==
-        "-resize 10x10 -interlace none"
-    end
-
-    it("should not be set if progressive isn't supplied") do
-      command({:resize => "10x10"}).convert_options.should_not match /interlace/
+      result.should_not be_modified
     end
   end
 end

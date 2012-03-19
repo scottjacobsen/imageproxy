@@ -1,8 +1,11 @@
 source :rubygems
 
+gem "rest-client", "~> 1.6.7"
 gem "rack"
 gem "rake"
 gem "mime-types"
+gem "rmagick", "~> 2.13", :require => false
+gem "newrelic_rpm"
 
 group :development, :test do
   gem "heroku"

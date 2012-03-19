@@ -1,10 +1,10 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), "options")
 require File.join(File.expand_path(File.dirname(__FILE__)), "convert")
-require File.join(File.expand_path(File.dirname(__FILE__)), "identify")
-require File.join(File.expand_path(File.dirname(__FILE__)), "identify_format")
 require File.join(File.expand_path(File.dirname(__FILE__)), "selftest")
 require File.join(File.expand_path(File.dirname(__FILE__)), "signature")
 require 'uri'
+require 'newrelic_rpm'
+require 'new_relic/agent/instrumentation/rack'
 
 module Imageproxy
   class Server
@@ -16,7 +16,6 @@ module Imageproxy
       request = Rack::Request.new(env)
       options = Options.new(request.path_info, request.params)
       user_agent = request.env["HTTP_USER_AGENT"]
-      cachetime = config(:cache_time) ? config(:cache_time) : 86400
 
       case options.command
         when "crossdomain.xml"
@@ -31,19 +30,14 @@ module Imageproxy
           check_domain options
           check_size options
 
-          file = convert_file(options, user_agent)
-          class << file
-            alias to_path path
+          requested_etag = request.env['HTTP_IF_NONE_MATCH']
+          converted_image = Convert.new(options, config(:cache_time), requested_etag).execute(user_agent, config(:timeout))
+          if converted_image.modified?
+            raise "Empty image file" if converted_image.empty?
+            [200, converted_image.headers, converted_image.stream]
+          else
+            [304, converted_image.headers]
           end
-
-          raise "Empty image file" unless File.stat(file.path).size > 0
-          file.open
-          [200, {"Cache-Control" => "max-age=#{cachetime}, must-revalidate"}.merge(content_type(file, options)), file]
-        when "identify"
-          check_signature request, options
-          check_domain options
-
-          [200, {"Content-Type" => "text/plain"}, [Identify.new(options).execute(user_agent)]]
         when "selftest"
           [200, {"Content-Type" => "text/html"}, [Selftest.html(request, config?(:signature_required), config(:signature_secret))]]
         else
@@ -51,15 +45,12 @@ module Imageproxy
       end
     rescue
       STDERR.puts $!
-      STDERR.puts $!.backtrace.join("\n") if config?(:verbose)
+      STDERR.puts $!.backtrace.join("\n")
       [500, {"Content-Type" => "text/plain"}, ["Error (#{$!})"]]
     end
-
+    # Do the include after the call method is defined:
+    include NewRelic::Agent::Instrumentation::Rack
     private
-
-    def convert_file(options, user_agent)
-      Convert.new(options).execute(user_agent, config(:timeout))
-    end
 
     def config(symbol)
       ENV["IMAGEPROXY_#{symbol.to_s.upcase}"]
@@ -116,17 +107,6 @@ module Imageproxy
       else
         sizes[0].to_i
       end
-    end
-
-    def content_type(file, options)
-      format = options.format
-      format = identify_format(file) unless format
-      format = options.source unless format
-      format ? { "Content-Type" => MIME::Types.of(format).first.content_type } : {}
-    end
-
-    def identify_format(file)
-      Imageproxy::IdentifyFormat.new(file).execute
     end
   end
 end

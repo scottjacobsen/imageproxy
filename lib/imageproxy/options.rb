@@ -38,6 +38,14 @@ module Imageproxy
       end
     end
 
+    def keys
+      @hash.keys
+    end
+
+    def [](symbol)
+      @hash[symbol.to_s] || @hash[symbol]
+    end
+
     def method_missing(symbol)
       @hash[symbol.to_s] || @hash[symbol]
     end
