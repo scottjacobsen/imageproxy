@@ -8,10 +8,13 @@ gem "rmagick", "~> 2.13", :require => false
 gem "newrelic_rpm"
 
 group :development, :test do
-  gem "heroku"
-  gem "shotgun"
-  gem "rspec"
-  gem "rack-test", :require => "rack/test"
   gem "awesome_print"
+  gem "ci_reporter", :require => false
+  gem "heroku"
   gem "jeweler"
+  gem "rack-test", :require => "rack/test"
+  gem "rspec"
+  gem "shotgun"
+  gem 'simplecov', :require => false
+  gem 'simplecov-rcov', :require => false
 end

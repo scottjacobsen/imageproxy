@@ -23,3 +23,6 @@ doc
 
 # jeweler generated
 pkg
+
+#ci_reporter
+spec/reports/
