@@ -1,4 +1,10 @@
 require 'bundler'
+begin
+  require 'ci/reporter/rake/rspec'     # use this if you're using RSpec
+rescue LoadError
+  puts "could not load ci_reporter rspec task"
+end
+
 Bundler.require :test
 
 desc "Run all specs"
