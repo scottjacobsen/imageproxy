@@ -44,7 +44,7 @@ module Imageproxy
 
       def headers
         cache_time = @cache_time || 86400
-        headers = {"Cache-Control" => "public, max-age=#{cache_time}" }
+        headers = {"Cache-Control" => "public, max-age=#{cache_time}", "Last-Modified" => Time.now.httpdate }
 
         if modified?
           headers.merge!("Content-Length" => size.to_s,

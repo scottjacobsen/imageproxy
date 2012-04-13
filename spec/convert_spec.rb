@@ -39,6 +39,11 @@ describe Imageproxy::Convert do
 
       Imageproxy::Convert.new(@options, 1000).execute("test agent", 1234)
     end
+
+    it "adds a last-modified header" do
+      result = Imageproxy::Convert.new(@options, 1000).execute("test agent", 1234)
+      result.headers['Last-Modified'].should be_instance_of(String)
+    end
   end
 
   context "When requesting a resize we already may have cached" do
