@@ -72,7 +72,8 @@ module Imageproxy
     end
 
     def check_domain(options)
-      raise "Invalid domain" unless domain_allowed? options.source
+      url = options.source
+      raise "Invalid domain for #{url}" unless domain_allowed? url
     end
 
     def check_size(options)
