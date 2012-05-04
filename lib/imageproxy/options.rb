@@ -53,7 +53,12 @@ module Imageproxy
     private
 
     def unescape_source
-      @hash['source'] &&= CGI.unescape(CGI.unescape(@hash['source']))
+      if @hash['source']
+        @hash['source'] = CGI.unescape(CGI.unescape(@hash['source']))
+        unless @hash['source'] =~ /^http/
+          @hash['source'] = UrlCompressor.decompress(@hash['source'])
+        end
+      end
     end
 
     def unescape_signature

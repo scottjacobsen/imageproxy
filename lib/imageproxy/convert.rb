@@ -114,12 +114,8 @@ module Imageproxy
         request_options[:if_none_match] = %{"#{source_etag}"}
       end
 
-      source = options.source
-      unless source =~ /^http/
-        source = UrlCompressor.decompress(source)
-      end
       begin
-        response = RestClient.get(source, request_options)
+        response = RestClient.get(options.source, request_options)
       rescue RestClient::NotModified => e
         return ConvertedImage.new(nil, e.response.headers, options, @cache_time, false)
       end
