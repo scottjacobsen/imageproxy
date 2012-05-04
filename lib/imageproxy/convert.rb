@@ -3,6 +3,7 @@ require File.join(File.expand_path(File.dirname(__FILE__)), "command")
 require 'RMagick'
 require 'rest_client'
 require 'digest'
+require 'url-compressor'
 
 module Imageproxy
   class Convert < Imageproxy::Command
@@ -113,8 +114,12 @@ module Imageproxy
         request_options[:if_none_match] = %{"#{source_etag}"}
       end
 
+      source = options.source
+      unless source =~ /^http/
+        source = UrlCompressor.decompress(source)
+      end
       begin
-        response = RestClient.get(options.source, request_options)
+        response = RestClient.get(source, request_options)
       rescue RestClient::NotModified => e
         return ConvertedImage.new(nil, e.response.headers, options, @cache_time, false)
       end
