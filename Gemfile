@@ -7,6 +7,7 @@ gem "mime-types"
 gem "rmagick", "~> 2.13", :require => false
 gem "newrelic_rpm"
 gem "thin"
+gem "url-compressor", :path => 'vendor/private_gems/url-compressor-0.0.1'
 
 group :development, :test do
   gem "awesome_print"

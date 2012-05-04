@@ -1,3 +1,8 @@
+PATH
+  remote: vendor/private_gems/url-compressor-0.0.1
+  specs:
+    url-compressor (0.0.1)
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -74,3 +79,4 @@ DEPENDENCIES
   simplecov
   simplecov-rcov
   thin
+  url-compressor!
