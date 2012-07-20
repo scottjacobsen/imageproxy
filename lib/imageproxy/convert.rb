@@ -87,7 +87,20 @@ module Imageproxy
       if options.resize
         x, y = options.resize.split('x').collect(&:to_i)
 
-        if options.shape == "cut"
+        if options.shape == "trimcut"
+
+          # Add (near) black border to aid trimming
+          # Near black, because we can use a lower fuzz level
+          # and digitized TV can have black level 16/255 anyhow.
+
+          image.fuzz = "20%"
+          image.trim!(true)
+          image.crop_resized!(x, y, Magick::CenterGravity)
+
+          # According to our heuristics we should really
+          # use gravity moved 15% below of center
+
+        elsif options.shape == "cut"
           image.crop_resized!(x, y, Magick::CenterGravity)
         else
           image.change_geometry(options.resize) do |proportional_x, proportional_y, img|
