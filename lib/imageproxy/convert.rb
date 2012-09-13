@@ -17,7 +17,6 @@ module Imageproxy
       end
 
       def source_etag
-        return false
         if source_headers[:etag]
           match = /(?:W\/)?\"(.*)\"/.match(source_headers[:etag])
           return nil unless match
