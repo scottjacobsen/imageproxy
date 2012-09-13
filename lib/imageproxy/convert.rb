@@ -17,7 +17,6 @@ module Imageproxy
       end
 
       def source_etag
-        return false
         if source_headers[:etag]
           match = /(?:W\/)?\"(.*)\"/.match(source_headers[:etag])
           return nil unless match
@@ -44,7 +43,7 @@ module Imageproxy
 
       def headers
         cache_time = @cache_time || 86400
-        headers = {"Cache-Control" => "public, max-age=#{cache_time}", "Last-Modified" => Time.now.httpdate }
+        headers = {"Cache-Control" => "public, max-age=#{cache_time}" }
 
         if modified?
           headers.merge!("Content-Length" => size.to_s,
@@ -56,6 +55,8 @@ module Imageproxy
           # Using weak etag (the prefixed "W"), since the image transformations
           # aren't necessarily byte-to-byte identical
           headers.merge!("ETag" => %{W/"#{quoted_original_etag}-#{transformation_checksum(@options)}"})
+        else
+          headers.merge!("Last-Modified" => Time.now.httpdate)
         end
         headers
       end

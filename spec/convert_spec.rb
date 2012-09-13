@@ -31,18 +31,13 @@ describe Imageproxy::Convert do
     it "creates an ETag based on the source's ETag and the options" do
       result = Imageproxy::Convert.new(@options, 1000).execute("test agent", 1234)
 
-      result.headers['ETag'].should_not =~ %r{^W\/"SOMEETAG\-.+"$}
+      result.headers['ETag'].should =~ %r{^W\/"SOMEETAG\-.+"$}
     end
 
     it "uses the given timeout when fetching" do
       RestClient.should_receive(:get).with("http://example.com/sample.png", :timeout => 1234, :user_agent => "test agent", :accept => '*/*').and_return(@response)
 
       Imageproxy::Convert.new(@options, 1000).execute("test agent", 1234)
-    end
-
-    it "adds a last-modified header" do
-      result = Imageproxy::Convert.new(@options, 1000).execute("test agent", 1234)
-      result.headers['Last-Modified'].should be_instance_of(String)
     end
   end
 
