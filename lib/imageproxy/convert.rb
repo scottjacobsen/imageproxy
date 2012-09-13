@@ -55,6 +55,8 @@ module Imageproxy
           # Using weak etag (the prefixed "W"), since the image transformations
           # aren't necessarily byte-to-byte identical
           headers.merge!("ETag" => %{W/"#{quoted_original_etag}-#{transformation_checksum(@options)}"})
+        else
+          headers.merge!("Last-Modified" => Time.now.httpdate)
         end
         headers
       end
