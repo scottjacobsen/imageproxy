@@ -27,4 +27,3 @@ pkg
 
 #ci_reporter
 spec/reports/
-bin/
