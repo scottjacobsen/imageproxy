@@ -127,11 +127,6 @@ module Imageproxy
       end
 
       begin
-
-        # TODO debug output, remove me:
-        STDERR.write "img.tv4.se from: #{request.env["HTTP_REFERER"]}\n" if options.source =~ /img\.tv4\.se/
-
-
         response = RestClient.get(options.source, request_options)
       rescue RestClient::NotModified => e
         return ConvertedImage.new(nil, e.response.headers, options, @cache_time, false)
