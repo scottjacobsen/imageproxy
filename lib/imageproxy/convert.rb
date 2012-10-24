@@ -43,7 +43,7 @@ module Imageproxy
 
       def headers
         cache_time = @cache_time || 86400
-        headers = {"Cache-Control" => "public, max-age=#{cache_time}" }
+        headers = {"Cache-Control" => "public, max-age=#{cache_time}"}
 
         if modified?
           headers.merge!("Content-Length" => size.to_s,
@@ -127,11 +127,6 @@ module Imageproxy
       end
 
       begin
-
-        # TODO debug output, remove me:
-        STDERR.write "img.tv4.se from: #{request.env["HTTP_REFERER"]}\n" if options.source =~ /img\.tv4\.se/
-
-
         response = RestClient.get(options.source, request_options)
       rescue RestClient::NotModified => e
         return ConvertedImage.new(nil, e.response.headers, options, @cache_time, false)
@@ -140,7 +135,10 @@ module Imageproxy
       original_image = response.to_str
       image = process_image(original_image)
 
-      ConvertedImage.new(image.to_blob, response.headers, options, @cache_time)
+      image_blob = image.to_blob {
+        self.quality = ENV['IMAGE_QUALITY'].to_i if ENV['IMAGE_QUALITY'] # From 0 to 100, where 100 is best. Default is claimed to be 75.
+      }
+      ConvertedImage.new(image_blob, response.headers, options, @cache_time)
     end
   end
 end
