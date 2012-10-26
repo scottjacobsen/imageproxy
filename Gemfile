@@ -1,7 +1,5 @@
 source :rubygems
 
-ruby "1.9.3"
-
 gem "rest-client", "~> 1.6.7"
 gem "rack"
 gem "rake"
