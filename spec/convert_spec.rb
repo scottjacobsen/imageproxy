@@ -41,6 +41,42 @@ describe Imageproxy::Convert do
     end
   end
 
+  context "When requesting a resize with only X dimension" do
+    before do
+      @options = mock("options")
+      @options.stub(:resize).and_return("123")
+      @options.stub(:source).and_return("http://example.com/sample.png")
+      @options.stub(:shape).and_return("cut")
+      @options.stub(:keys).and_return([:resize, :source])
+      @options.stub(:aspect_ratio).and_return("4:3")
+      @options.stub(:[]).with(:resize).and_return("123")
+      @options.stub(:[]).with(:source).and_return("http://example.com/sample.png")
+
+      @response = mock("response")
+      @response.stub(:headers).and_return({:etag => '"SOMEETAG"'})
+      @response.stub(:code).and_return(200)
+      RestClient.stub(:get).and_return(@response)
+      @response.stub(:to_str).and_return(open('public/sample.png').read)
+    end
+
+    it "uses aspect ratio param when available" do
+      result = Imageproxy::Convert.new(@options, 1000).execute("test agent", 1234)
+
+      image = Magick::Image.from_blob(result.stream.read).first
+      image.columns.should == 123
+      image.rows.should == 92
+    end
+
+    it "uses square aspect ratio param when not given" do
+      @options.stub(:aspect_ratio).and_return(nil)
+      result = Imageproxy::Convert.new(@options, 1000).execute("test agent", 1234)
+
+      image = Magick::Image.from_blob(result.stream.read).first
+      image.columns.should == 123
+      image.rows.should == 123
+    end
+  end
+
   context "When requesting a resize we already may have cached" do
     before do
       @options = mock("options")

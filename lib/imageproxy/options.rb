@@ -27,6 +27,7 @@ module Imageproxy
       check_param('progressive', /^true|false$/i)
       check_param('background', /^#[0-9a-f]{3}([0-9a-f]{3})?|rgba\([0-9]{1,3},[0-9]{1,3},[0-9]{1,3},[0-1](.[0-9]+)?\)$/)
       check_param('shape', /^preserve|pad|cut$/i)
+      check_param('aspect_ratio', /^[0-9]{1,3}\:[0-9]{1,3}$/)
       @hash['quality'] = [[@hash['quality'].to_i, 100].min, 0].max.to_s if @hash.has_key?('quality')
     end
 

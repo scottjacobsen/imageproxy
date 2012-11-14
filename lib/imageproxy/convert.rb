@@ -87,6 +87,12 @@ module Imageproxy
       if options.resize
         x, y = options.resize.split('x').collect(&:to_i)
 
+        if y.nil? && options.aspect_ratio
+          aspect_ratio = options.aspect_ratio.split(':').collect(&:to_f)
+          y = (x / (aspect_ratio.first / aspect_ratio.last)).round
+        end
+
+
         if options.shape == "trimcut"
 
           # Add (near) black border to aid trimming
