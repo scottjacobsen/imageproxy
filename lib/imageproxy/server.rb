@@ -37,7 +37,7 @@ module Imageproxy
              STDERR.puts "OK: command=#{options.command} url=#{options.source} ua=\"#{user_agent}\""
             [200, converted_image.headers, converted_image.stream]
           else
-            [304, converted_image.headers]
+            [304, converted_image.headers, []]
           end
         when "selftest"
           [200, {"Content-Type" => "text/html"}, [Selftest.html(request, config?(:signature_required), config(:signature_secret))]]
