@@ -76,9 +76,6 @@ module Imageproxy
       @options = options
       @cache_time = cache_time
       @requested_etag = requested_etag
-      if (!(options.resize || options.thumbnail || options.rotate || options.flip || options.format || options.quality))
-        raise "Missing action or illegal parameter value"
-      end
     end
 
     def process_image(original_image)
