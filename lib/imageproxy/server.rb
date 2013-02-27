@@ -45,7 +45,7 @@ module Imageproxy
           @file_server.call(env)
       end
     rescue
-      STDERR.puts "ERR: command=#{options.command} url=#{options.source} error=\"#{$!}\""
+      STDERR.puts "ERR: command=#{options.command if options.respond_to?(:command)} url=#{options.source if options.respond_to?(:source)} error=\"#{$!}\""
       STDERR.puts $!
       STDERR.puts $!.backtrace.join("\n")
       [500, {"Content-Type" => "text/plain"}, ["Error (#{$!})"]]
