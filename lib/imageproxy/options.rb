@@ -20,7 +20,7 @@ module Imageproxy
     end
 
     def check_parameters
-      check_param('resize', /^\d{1,5}(x\d{1,5})?$/)
+      check_param('resize', /^(\d{1,5}(x\d{1,5})?)|(x\d{1,5})$/) # XxY, X, Xx or xY
       check_param('thumbnail', /^\d{1,5}(x\d{1,5})?$/)
       check_param('rotate', /^(-)?\d{1,3}(\.\d+)?$/)
       check_param('format', /^[0-9a-zA-Z]{2,6}$/)
