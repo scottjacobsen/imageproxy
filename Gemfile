@@ -1,4 +1,4 @@
-source :rubygems
+source 'https://rubygems.org'
 
 gem "rest-client", "~> 1.6.7"
 gem "rack"
@@ -10,6 +10,7 @@ gem "thin"
 gem "foreman"
 
 group :development, :test do
+  gem "foreman"
   gem "awesome_print"
   gem "ci_reporter", :require => false
   gem "heroku"
