@@ -7,7 +7,7 @@ gem "mime-types"
 gem "rmagick", "~> 2.13.2", :require => false
 gem "newrelic_rpm"
 gem "thin"
-gem "foreman"
+gem "unicorn"
 
 group :development, :test do
   gem "foreman"
