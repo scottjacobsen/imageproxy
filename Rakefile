@@ -1,5 +1,5 @@
 unless ENV["RACK_ENV"] == "stage" || ENV["RACK_ENV"] == "production"
-require 'bundler'
+require 'bundler/gem_tasks'
 begin
   require 'ci/reporter/rake/rspec'     # use this if you're using RSpec
 rescue LoadError
@@ -55,7 +55,7 @@ namespace :scale do
   task :extrasmall do
   scale_dynos(3)
   end
-  
+
   desc "Scale dynos to small mode"
   task :small do
   scale_dynos(15)
@@ -83,7 +83,6 @@ namespace :scale do
 
   def scale_dynos(dynos)
   heroku = Heroku::API.new(:api_key => ENV['MY_API_KEY'])
-  heroku.post_ps_scale(ENV['APP_NAME'], 'web', dynos)        
+  heroku.post_ps_scale(ENV['APP_NAME'], 'web', dynos)
   end
 end
-

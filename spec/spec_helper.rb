@@ -1,8 +1,9 @@
 require 'simplecov'
-ENV["RACK_ENV"] = "test" 
+ENV["RACK_ENV"] = "test"
 Bundler.require :test
 
-Dir.glob(File.join(File.dirname(__FILE__), "..", "lib", "**", "*.rb")).each {|f| require f }
+$:.unshift File.expand_path('../../lib', __FILE__)
+require 'imageproxy'
 
 def response_body_as_file
   result_file = Tempfile.new("request_spec")

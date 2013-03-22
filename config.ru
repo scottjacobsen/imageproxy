@@ -1,5 +1,6 @@
+require 'rubygems'
 require 'bundler'
-require 'rack/sendfile'
+Bundler.require :default
 
 require File.join(File.expand_path(File.dirname(__FILE__)), "lib", "imageproxy")
 
