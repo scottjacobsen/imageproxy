@@ -1,4 +1,3 @@
-
 require 'spec_helper'
 
 def accepts_rezise_option?(resize)
@@ -21,6 +20,18 @@ describe Imageproxy::Options do
       accepts_rezise_option?('').should be_false
       accepts_rezise_option?(nil).should be_false
 
+    end
+  end
+
+  describe "#remap_source" do
+    it "leaves most urls alone" do
+      options = Imageproxy::Options.new("the-path", {'source' => 'http://foo/bar'})
+      options.source.should == 'http://foo/bar'
+    end
+
+    it "changes prima.tv4play.se requests to API4's proxy" do
+      options = Imageproxy::Options.new("the-path", {'source' => 'http://prima.tv4play.se/multimedia/vman/VMan-P229/VMan-P2292392_OG.jpg'})
+      options.source.should == 'http://webapi.tv4play.se/prima/multimedia/vman/VMan-P229/VMan-P2292392_OG.jpg'
     end
   end
 end
