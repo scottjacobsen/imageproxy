@@ -24,6 +24,10 @@ describe Imageproxy::Options do
   end
 
   describe "#remap_source" do
+    before do
+      ENV['toggle.remap_prima'] = 'true'
+    end
+
     it "leaves most urls alone" do
       options = Imageproxy::Options.new("the-path", {'source' => 'http://foo/bar'})
       options.source.should == 'http://foo/bar'
