@@ -41,6 +41,7 @@ module Imageproxy
     end
 
     def remap_source
+      return unless ENV['toggle.remap_prima'] == 'true'
       return unless @hash.has_key? 'source'
       # Since Prima is slow, we'll fetch those images via API4's proxy, which is Akamai cached.
       @hash['source'] = @hash['source'].sub(%r{^http://prima\.tv4play\.se/}, 'http://webapi.tv4play.se/prima/')

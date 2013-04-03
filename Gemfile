@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+ruby "1.9.3"
+
 gem "rest-client", "~> 1.6.7"
 gem "rack"
 gem "rake"
@@ -13,7 +15,6 @@ group :development, :test do
   gem "foreman"
   gem "awesome_print"
   gem "ci_reporter", :require => false
-  gem "heroku"
   gem "jeweler"
   gem "rack-test", :require => "rack/test"
   gem "rspec"
