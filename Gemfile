@@ -22,3 +22,8 @@ group :development, :test do
   gem 'simplecov', :require => false
   gem 'simplecov-rcov', :require => false
 end
+
+group :production, :stage do
+  gem 'heroku'
+  gem 'heroku-api'
+end
