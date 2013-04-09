@@ -1,3 +1,4 @@
+unless ENV["RACK_ENV"] == "stage" || ENV["RACK_ENV"] == "production"
 require 'bundler'
 begin
   require 'ci/reporter/rake/rspec'     # use this if you're using RSpec
@@ -46,6 +47,7 @@ Jeweler::Tasks.new do |gem|
 end
 Jeweler::RubygemsDotOrgTasks.new
 
+end
 require 'heroku-api'
 
 namespace :scale do
