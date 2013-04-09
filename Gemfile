@@ -24,6 +24,5 @@ group :development, :test do
 end
 
 group :production, :stage do
-  gem 'heroku'
   gem 'heroku-api'
 end
