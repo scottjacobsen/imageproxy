@@ -52,32 +52,32 @@ require 'heroku-api'
 
 namespace :scale do
   desc "Scale dynos to extrasmall mode"
-  task :extrasmall => :environment do
+  task :extrasmall do
   scale_dynos(3)
   end
   
   desc "Scale dynos to small mode"
-  task :small => :environment do
+  task :small do
   scale_dynos(15)
   end
 
   desc "Scale dynos to medium mode"
-  task :medium => :environment do
+  task :medium do
   scale_dynos(25)
   end
 
   desc "Scale dynos to extralarge mode"
-  task :large => :environment do
+  task :large do
   scale_dynos(35)
   end
 
   desc "Scale dynos to extralarge mode"
-  task :extralarge => :environment do
+  task :extralarge do
   scale_dynos(50)
   end
 
   desc "Scale dynos to panic mode"
-  task :panic => :environment do
+  task :panic do
   scale_dynos(80)
   end
 
