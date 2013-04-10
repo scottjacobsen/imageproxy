@@ -146,7 +146,12 @@ module Imageproxy
       end
 
       original_image = response.to_str
-      image = process_image(original_image)
+      begin
+        image = process_image(original_image)
+      rescue Magick::ImageMagickError
+        STDERR.puts "Corrupt image: #{options.source}"
+        return ConvertedImage.new(nil, {}, options, @cache_time, true, false)
+      end
 
       image_blob = image.to_blob {
         self.quality = ENV['IMAGE_QUALITY'].to_i if ENV['IMAGE_QUALITY'] # From 0 to 100, where 100 is best. Default is claimed to be 75.
