@@ -11,8 +11,9 @@ module Imageproxy
     class ConvertedImage
       attr_reader :image_blob, :source_headers
 
-      def initialize(image_blob, source_headers, options, cache_time, modified = true)
+      def initialize(image_blob, source_headers, options, cache_time, modified = true, exists = true)
         @modified = modified
+        @exists = exists
         @image_blob, @source_headers, @options, @cache_time = image_blob, source_headers, options, cache_time
       end
 
@@ -69,6 +70,10 @@ module Imageproxy
 
       def modified?
         @modified
+      end
+
+      def exists?
+        @exists
       end
     end
 
@@ -133,6 +138,8 @@ module Imageproxy
         response = RestClient.get(options.source, request_options)
       rescue RestClient::NotModified => e
         return ConvertedImage.new(nil, e.response.headers, options, @cache_time, false)
+      rescue RestClient::ResourceNotFound
+        return ConvertedImage.new(nil, {}, options, @cache_time, true, false)
       end
 
       original_image = response.to_str

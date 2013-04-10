@@ -32,7 +32,10 @@ module Imageproxy
 
           requested_etag = request.env['HTTP_IF_NONE_MATCH']
           converted_image = Convert.new(options, config(:cache_time), requested_etag).execute(user_agent, config(:timeout))
-          if converted_image.modified?
+          if !converted_image.exists?
+            STDERR.puts "NOT FOUND: command=#{options.command} url=#{options.source} ua=\"#{user_agent}\""
+            [404, {'Cache-Control' => 'public, max-age: 3600000'}, ['Not found']]
+          elsif converted_image.modified?
             raise "Empty image file" if converted_image.empty?
              STDERR.puts "OK: command=#{options.command} url=#{options.source} ua=\"#{user_agent}\""
             [200, converted_image.headers, converted_image.stream]
