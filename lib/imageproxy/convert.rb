@@ -140,9 +140,12 @@ module Imageproxy
       rescue RestClient::NotModified => e
         return ConvertedImage.new(nil, e.response.headers, options, @cache_time, false)
       rescue RestClient::ResourceNotFound
-        return ConvertedImage.new(nil, {}, options, @cache_time, true, false)
+        return image_404
       rescue RestClient::MaxRedirectsReached
-        return ConvertedImage.new(nil, {}, options, @cache_time, true, false)
+        return image_404
+      rescue URI::InvalidURIError
+        # Not really a 404, but simpler than adding 400 error handling
+        return image_404
       end
 
       original_image = response.to_str
@@ -150,13 +153,17 @@ module Imageproxy
         image = process_image(original_image)
       rescue Magick::ImageMagickError
         STDERR.puts "Corrupt image: #{options.source}"
-        return ConvertedImage.new(nil, {}, options, @cache_time, true, false)
+        return image_404
       end
 
       image_blob = image.to_blob {
         self.quality = ENV['IMAGE_QUALITY'].to_i if ENV['IMAGE_QUALITY'] # From 0 to 100, where 100 is best. Default is claimed to be 75.
       }
       ConvertedImage.new(image_blob, response.headers, options, @cache_time)
+    end
+
+    def image_404
+      ConvertedImage.new(nil, {}, options, @cache_time, true, false)
     end
   end
 end
