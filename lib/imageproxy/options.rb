@@ -45,6 +45,8 @@ module Imageproxy
       return unless @hash.has_key? 'source'
       # Since Prima is slow, we'll fetch those images via API4's proxy, which is Akamai cached.
       @hash['source'] = @hash['source'].sub(%r{^http://prima\.tv4play\.se/}, 'http://webapi.tv4play.se/prima/')
+      # For some reason something requests directly from api.tv4play.se, which is bad
+      @hash['source'] = @hash['source'].sub(%r{^http://api\.tv4play\.se/}, 'http://webapi.tv4play.se/')
     end
 
     def keys
