@@ -16,7 +16,7 @@ describe Imageproxy::Convert do
       @response = mock("response")
       @response.stub(:headers).and_return({:etag => '"SOMEETAG"'})
       @response.stub(:code).and_return(200)
-      RestClient.stub(:get).and_return(@response)
+      RestClient::Request.stub(:execute).and_return(@response)
       @response.stub(:to_str).and_return(open('public/sample.png').read)
     end
 
@@ -35,7 +35,7 @@ describe Imageproxy::Convert do
     end
 
     it "uses the given timeout when fetching" do
-      RestClient.should_receive(:get).with("http://example.com/sample.png", :timeout => 1234, :user_agent => "test agent", :accept => '*/*').and_return(@response)
+      RestClient::Request.should_receive(:execute).with(method: :get, :url => "http://example.com/sample.png", headers: {:timeout => 1234, :user_agent => "test agent", :accept => '*/*'}, max_redirects: 0).and_return(@response)
 
       Imageproxy::Convert.new(@options, 1000).execute("test agent", 1234)
     end
@@ -55,7 +55,7 @@ describe Imageproxy::Convert do
       @response = mock("response")
       @response.stub(:headers).and_return({:etag => '"SOMEETAG"'})
       @response.stub(:code).and_return(200)
-      RestClient.stub(:get).and_return(@response)
+      RestClient::Request.stub(:execute).and_return(@response)
       @response.stub(:to_str).and_return(open('public/sample.png').read)
     end
 
@@ -90,12 +90,12 @@ describe Imageproxy::Convert do
       @response = mock("response")
       @response.stub(:headers).and_return({:etag => '"SOMEETAG"'})
       @response.stub(:code).and_return(200)
-      RestClient.stub(:get).and_return(@response)
+      RestClient::Request.stub(:execute).and_return(@response)
       @response.stub(:to_str).and_return(open('public/sample.png').read)
     end
 
     it "resizes the image if the source has changed" do
-      RestClient.should_receive(:get).with("http://example.com/sample.png", :timeout => 1234, :user_agent => "test agent", :if_none_match => '"SOMEETAG"', :accept => '*/*').and_return(@response)
+      RestClient::Request.should_receive(:execute).with(method: :get, url: "http://example.com/sample.png", headers: {:timeout => 1234, :user_agent => "test agent", :if_none_match => '"SOMEETAG"', :accept => '*/*'}, max_redirects: 0).and_return(@response)
 
       result = Imageproxy::Convert.new(@options, 1000, '"SOMEETAG-foo"').execute("test agent", 1234)
 
@@ -103,8 +103,8 @@ describe Imageproxy::Convert do
     end
 
     it "doesn't resize the image if source hasn't changed" do
-      RestClient.stub(:get).and_raise(RestClient::NotModified.new(@response))
-      RestClient.should_receive(:get).with("http://example.com/sample.png", :timeout => 1234, :user_agent => "test agent", :if_none_match => '"SOMEETAG"', :accept => '*/*').and_return(@response)
+      RestClient::Request.stub(:execute).and_raise(RestClient::NotModified.new(@response))
+      RestClient::Request.should_receive(:execute).with(method: :get, url: "http://example.com/sample.png", headers: {:timeout => 1234, :user_agent => "test agent", :if_none_match => '"SOMEETAG"', :accept => '*/*'}, max_redirects: 0).and_return(@response)
       Magick::Image.should_not_receive(:from_blob)
 
       result = Imageproxy::Convert.new(@options, 1000, '"SOMEETAG-foo"').execute("test agent", 1234)

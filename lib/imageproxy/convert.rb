@@ -135,10 +135,13 @@ module Imageproxy
       end
 
       begin
-        response = RestClient.get(options.source, request_options)
+        response = RestClient::Request.execute(:method => :get, :url => options.source, :headers => request_options, :max_redirects => 0)
+
       rescue RestClient::NotModified => e
         return ConvertedImage.new(nil, e.response.headers, options, @cache_time, false)
       rescue RestClient::ResourceNotFound
+        return ConvertedImage.new(nil, {}, options, @cache_time, true, false)
+      rescue RestClient::MaxRedirectsReached
         return ConvertedImage.new(nil, {}, options, @cache_time, true, false)
       end
 
