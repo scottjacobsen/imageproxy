@@ -27,7 +27,11 @@ module Imageproxy
           [200, {"Content-Type" => "application/xml"}, [xml]]
         when "convert", "process", nil
           check_signature request, options
-          check_domain options
+          begin
+            check_domain options
+          rescue
+            return [404, {'Cache-Control' => 'public, max-age: 3600000'}, ["Not found (domain)"]]
+          end
           check_size options
 
           requested_etag = request.env['HTTP_IF_NONE_MATCH']
