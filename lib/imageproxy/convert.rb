@@ -121,11 +121,10 @@ module Imageproxy
       image
     end
 
-    def execute(user_agent=nil, timeout=nil)
+    def execute(user_agent=nil, timeout=0)
       user_agent = user_agent || "imageproxy"
 
       request_options = {
-              :timeout => timeout,
               :user_agent => user_agent,
               :accept => '*/*'
       }
@@ -135,7 +134,7 @@ module Imageproxy
       end
 
       begin
-        response = RestClient::Request.execute(:method => :get, :url => options.source, :headers => request_options, :max_redirects => 0)
+        response = RestClient::Request.execute(:method => :get, :url => options.source, :headers => request_options, :max_redirects => 0, :timeout => timeout, :open_timeout => timeout)
 
       rescue RestClient::NotModified => e
         return ConvertedImage.new(nil, e.response.headers, options, @cache_time, false)
