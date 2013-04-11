@@ -35,7 +35,7 @@ describe Imageproxy::Convert do
     end
 
     it "uses the given timeout when fetching" do
-      RestClient::Request.should_receive(:execute).with(method: :get, :url => "http://example.com/sample.png", headers: {:timeout => 1234, :user_agent => "test agent", :accept => '*/*'}, max_redirects: 0).and_return(@response)
+      RestClient::Request.should_receive(:execute).with(method: :get, :url => "http://example.com/sample.png", headers: {:user_agent => "test agent", :accept => '*/*'}, max_redirects: 0, timeout: 1234, open_timeout: 1234).and_return(@response)
 
       Imageproxy::Convert.new(@options, 1000).execute("test agent", 1234)
     end
@@ -95,7 +95,7 @@ describe Imageproxy::Convert do
     end
 
     it "resizes the image if the source has changed" do
-      RestClient::Request.should_receive(:execute).with(method: :get, url: "http://example.com/sample.png", headers: {:timeout => 1234, :user_agent => "test agent", :if_none_match => '"SOMEETAG"', :accept => '*/*'}, max_redirects: 0).and_return(@response)
+      RestClient::Request.should_receive(:execute).with(method: :get, url: "http://example.com/sample.png", headers: {:user_agent => "test agent", :if_none_match => '"SOMEETAG"', :accept => '*/*'}, max_redirects: 0, :timeout => 1234, :open_timeout => 1234).and_return(@response)
 
       result = Imageproxy::Convert.new(@options, 1000, '"SOMEETAG-foo"').execute("test agent", 1234)
 
@@ -104,7 +104,7 @@ describe Imageproxy::Convert do
 
     it "doesn't resize the image if source hasn't changed" do
       RestClient::Request.stub(:execute).and_raise(RestClient::NotModified.new(@response))
-      RestClient::Request.should_receive(:execute).with(method: :get, url: "http://example.com/sample.png", headers: {:timeout => 1234, :user_agent => "test agent", :if_none_match => '"SOMEETAG"', :accept => '*/*'}, max_redirects: 0).and_return(@response)
+      RestClient::Request.should_receive(:execute).with(method: :get, url: "http://example.com/sample.png", headers: {:user_agent => "test agent", :if_none_match => '"SOMEETAG"', :accept => '*/*'}, max_redirects: 0, :timeout => 1234, :open_timeout => 1234).and_return(@response)
       Magick::Image.should_not_receive(:from_blob)
 
       result = Imageproxy::Convert.new(@options, 1000, '"SOMEETAG-foo"').execute("test agent", 1234)
