@@ -89,11 +89,12 @@ module Imageproxy
     end
 
     def domain_allowed?(url)
-      return true unless allowed_domains
-      allowed_domains.include?(url_to_domain url)
+      return true unless allowed_domains || forbidden_domains
+      return false if forbidden_domains.include?(URI::parse(url).host)
+      allowed_domains.include?(base_domain url)
     end
 
-    def url_to_domain(url)
+    def base_domain(url)
       URI::parse(url).host.split(".")[-2, 2].join(".")
     rescue
       ""
@@ -101,6 +102,10 @@ module Imageproxy
 
     def allowed_domains
       config(:allowed_domains) && config(:allowed_domains).split(",").map(&:strip)
+    end
+
+    def forbidden_domains
+      config(:forbidden_domains) && config(:forbidden_domains).split(",").map(&:strip)
     end
 
     def exceeds_max_size(*sizes)
