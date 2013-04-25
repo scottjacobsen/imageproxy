@@ -35,7 +35,11 @@ module Imageproxy
           check_size options
 
           requested_etag = request.env['HTTP_IF_NONE_MATCH']
-          timeout = config(:timeout).to_i
+          if config(:timeout)
+            timeout = config(:timeout).to_i
+          else
+            timeout = 15
+          end
           converted_image = Convert.new(options, config(:cache_time), requested_etag).execute(user_agent, timeout)
           if !converted_image.exists?
             STDERR.puts "NOT FOUND: command=#{options.command} url=#{options.source} ua=\"#{user_agent}\""
