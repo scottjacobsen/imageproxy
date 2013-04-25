@@ -97,9 +97,8 @@ module Imageproxy
 
         if options.shape == "trimcut"
 
-          # Add (near) black border to aid trimming
-          # Near black, because we can use a lower fuzz level
-          # and digitized TV can have black level 16/255 anyhow.
+          # Add black border to aid trimming
+          image.border!(5, 5, 'black')
 
           image.fuzz = "20%"
           image.trim!(true)
