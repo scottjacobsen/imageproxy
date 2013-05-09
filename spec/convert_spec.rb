@@ -12,6 +12,7 @@ describe Imageproxy::Convert do
       @options.stub(:keys).and_return([:resize, :source])
       @options.stub(:[]).with(:resize).and_return("123x456")
       @options.stub(:[]).with(:source).and_return("http://example.com/sample.png")
+      @options.stub(:quality).and_return(nil)
 
       @response = mock("response")
       @response.stub(:headers).and_return({:etag => '"SOMEETAG"'})
@@ -51,6 +52,7 @@ describe Imageproxy::Convert do
       @options.stub(:aspect_ratio).and_return("4:3")
       @options.stub(:[]).with(:resize).and_return("123")
       @options.stub(:[]).with(:source).and_return("http://example.com/sample.png")
+      @options.stub(:quality).and_return(nil)
 
       @response = mock("response")
       @response.stub(:headers).and_return({:etag => '"SOMEETAG"'})
@@ -86,6 +88,7 @@ describe Imageproxy::Convert do
       @options.stub(:keys).and_return([:resize, :source])
       @options.stub(:[]).with(:resize).and_return("123x456")
       @options.stub(:[]).with(:source).and_return("http://example.com/sample.png")
+      @options.stub(:quality).and_return(nil)
 
       @response = mock("response")
       @response.stub(:headers).and_return({:etag => '"SOMEETAG"'})

@@ -154,8 +154,17 @@ module Imageproxy
         return image_404
       end
 
+      # Quality is from 0 to 100, where 100 is best. Default is claimed to be 75, but is in reality around 100. We've used 80 for a while.
+      if options.quality
+        qual = options.quality.to_i
+      elsif ENV['IMAGE_QUALITY']
+        qual = ENV['IMAGE_QUALITY'].to_i
+      else
+        qual = nil
+      end
+
       image_blob = image.to_blob {
-        self.quality = ENV['IMAGE_QUALITY'].to_i if ENV['IMAGE_QUALITY'] # From 0 to 100, where 100 is best. Default is claimed to be 75.
+        self.quality = qual if qual
       }
       ConvertedImage.new(image_blob, response.headers, options, @cache_time)
     end
